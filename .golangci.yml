@@ -21,6 +21,8 @@ linters-settings:
       - G404  # Use of weak random number generator
 
 issues:
+  exclude-dirs:
+    - vendor
   exclude-rules:
     - path: _test\.go
       linters:
@@ -30,10 +32,9 @@ issues:
 run:
   deadline: 5m
   tests: true
-  skip-dirs:
-    - vendor/
 
 output:
-  format: colored-line-number
+  formats:
+    - format: colored-line-number
   print-issued-lines: true
   print-linter-name: true

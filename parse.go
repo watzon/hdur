@@ -59,14 +59,65 @@ var unitMap = map[string]string{
 	"months":       "months",
 }
 
+// normalizeInput prepares the input string for parsing
+func normalizeInput(s string) string {
+	s = strings.ToLower(s)
+	s = strings.ReplaceAll(s, " and ", " ")
+	return strings.TrimSpace(s)
+}
+
+// parseNumber extracts and validates the numeric part of a duration component
+func parseNumber(numStr string) (int64, error) {
+	n, err := strconv.ParseInt(numStr, 10, 64)
+	if err != nil {
+		return 0, fmt.Errorf("invalid number: %s", numStr)
+	}
+	return n, nil
+}
+
+// normalizeUnit validates and normalizes the time unit
+func normalizeUnit(unit string) (string, error) {
+	unit = strings.TrimSpace(unit)
+	normalized, ok := unitMap[unit]
+	if !ok {
+		return "", fmt.Errorf("unknown unit: %s", unit)
+	}
+	return normalized, nil
+}
+
+// applyUnit adds the specified duration to the Duration struct
+func applyUnit(d *Duration, n int64, unit string) {
+	switch unit {
+	case "nanos":
+		d.Nanos += int(n)
+	case "micros":
+		d.Nanos += int(n * 1000)
+	case "millis":
+		d.Nanos += int(n * 1000000)
+	case "seconds":
+		d.Seconds += int(n)
+	case "minutes":
+		d.Minutes += int(n)
+	case "hours":
+		d.Hours += int(n)
+	case "days":
+		d.Days += int(n)
+	case "weeks":
+		d.Days += int(n * 7)
+	case "fortnights":
+		d.Days += int(n * 14)
+	case "months":
+		d.Months += int(n)
+	case "years":
+		d.Years += int(n)
+	}
+}
+
 // ParseDuration parses a duration string and returns a Duration
 // It supports multiple time units and ignores conjunctions like "and"
 // Example: "1 day 3 hours and 5 minutes" or "2weeks 4days"
 func ParseDuration(s string) (Duration, error) {
-	// Remove common conjunctions and normalize spaces
-	s = strings.ToLower(s)
-	s = strings.ReplaceAll(s, " and ", " ")
-	s = strings.TrimSpace(s)
+	s = normalizeInput(s)
 
 	matches := durationRegex.FindAllStringSubmatch(s, -1)
 	if len(matches) == 0 {
@@ -80,44 +131,19 @@ func ParseDuration(s string) (Duration, error) {
 			continue
 		}
 
-		n, err := strconv.ParseInt(match[1], 10, 64)
+		n, err := parseNumber(match[1])
 		if err != nil {
-			return Duration{}, fmt.Errorf("invalid number: %s", match[1])
+			return Duration{}, err
 		}
 
-		unit := strings.TrimSpace(match[2])
-		normalized, ok := unitMap[unit]
-		if !ok {
-			return Duration{}, fmt.Errorf("unknown unit: %s", unit)
+		unit, err := normalizeUnit(match[2])
+		if err != nil {
+			return Duration{}, err
 		}
 
-		switch normalized {
-		case "nanos":
-			d.Nanos += int(n)
-		case "micros":
-			d.Nanos += int(n * 1000)
-		case "millis":
-			d.Nanos += int(n * 1000000)
-		case "seconds":
-			d.Seconds += int(n)
-		case "minutes":
-			d.Minutes += int(n)
-		case "hours":
-			d.Hours += int(n)
-		case "days":
-			d.Days += int(n)
-		case "weeks":
-			d.Days += int(n * 7)
-		case "fortnights":
-			d.Days += int(n * 14)
-		case "months":
-			d.Months += int(n)
-		case "years":
-			d.Years += int(n)
-		}
+		applyUnit(&d, n, unit)
 	}
 
-	// Normalize the duration components
 	d.normalize()
 	return d, nil
 }

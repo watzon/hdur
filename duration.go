@@ -57,37 +57,53 @@ type Duration struct {
 	Nanos   int
 }
 
-// normalize ensures all duration components are within their natural ranges
-func (d *Duration) normalize() {
-	// First, determine if the duration is negative by checking the most significant non-zero component
-	isNegative := false
-	if d.Years < 0 {
-		isNegative = true
-	} else if d.Years == 0 && d.Months < 0 {
-		isNegative = true
-	} else if d.Years == 0 && d.Months == 0 && d.Days < 0 {
-		isNegative = true
-	} else if d.Years == 0 && d.Months == 0 && d.Days == 0 && d.Hours < 0 {
-		isNegative = true
-	} else if d.Years == 0 && d.Months == 0 && d.Days == 0 && d.Hours == 0 && d.Minutes < 0 {
-		isNegative = true
-	} else if d.Years == 0 && d.Months == 0 && d.Days == 0 && d.Hours == 0 && d.Minutes == 0 && d.Seconds < 0 {
-		isNegative = true
-	} else if d.Years == 0 && d.Months == 0 && d.Days == 0 && d.Hours == 0 && d.Minutes == 0 && d.Seconds == 0 && d.Nanos < 0 {
-		isNegative = true
+// isNegativeDuration checks if the duration is negative by examining
+// the first non-zero component in order of significance
+func (d *Duration) isNegativeDuration() bool {
+	switch {
+	case d.Years != 0:
+		return d.Years < 0
+	case d.Months != 0:
+		return d.Months < 0
+	case d.Days != 0:
+		return d.Days < 0
+	case d.Hours != 0:
+		return d.Hours < 0
+	case d.Minutes != 0:
+		return d.Minutes < 0
+	case d.Seconds != 0:
+		return d.Seconds < 0
+	case d.Nanos != 0:
+		return d.Nanos < 0
+	default:
+		return false
 	}
+}
 
-	// Make all components positive for normalization
-	if isNegative {
-		d.Years = -d.Years
-		d.Months = -d.Months
-		d.Days = -d.Days
-		d.Hours = -d.Hours
-		d.Minutes = -d.Minutes
-		d.Seconds = -d.Seconds
-		d.Nanos = -d.Nanos
-	}
+// makePositive makes all components of the duration positive
+func (d *Duration) makePositive() {
+	d.Years = abs(d.Years)
+	d.Months = abs(d.Months)
+	d.Days = abs(d.Days)
+	d.Hours = abs(d.Hours)
+	d.Minutes = abs(d.Minutes)
+	d.Seconds = abs(d.Seconds)
+	d.Nanos = abs(d.Nanos)
+}
 
+// makeNegative makes all components of the duration negative
+func (d *Duration) makeNegative() {
+	d.Years = -abs(d.Years)
+	d.Months = -abs(d.Months)
+	d.Days = -abs(d.Days)
+	d.Hours = -abs(d.Hours)
+	d.Minutes = -abs(d.Minutes)
+	d.Seconds = -abs(d.Seconds)
+	d.Nanos = -abs(d.Nanos)
+}
+
+// normalizeTimeUnits normalizes time units from smallest to largest
+func (d *Duration) normalizeTimeUnits() {
 	// Handle nanoseconds overflow
 	if d.Nanos >= 1000000000 {
 		d.Seconds += d.Nanos / 1000000000
@@ -111,22 +127,34 @@ func (d *Duration) normalize() {
 		d.Days += d.Hours / 24
 		d.Hours = d.Hours % 24
 	}
+}
 
-	// We don't normalize days to months by default, as months have variable lengths
-	// Only normalize months to years
+// normalizeMonthsToYears normalizes months to years
+func (d *Duration) normalizeMonthsToYears() {
 	if d.Months >= 12 {
 		d.Years += d.Months / 12
 		d.Months = d.Months % 12
 	}
+}
+
+// normalize ensures all duration components are within their natural ranges
+func (d *Duration) normalize() {
+	// First, determine if the duration is negative
+	isNegative := d.isNegativeDuration()
+
+	// Make all components positive for normalization
+	if isNegative {
+		d.makePositive()
+	}
+
+	// Normalize all time units
+	d.normalizeTimeUnits()
+
+	// Normalize months to years
+	d.normalizeMonthsToYears()
 
 	// Restore negative sign if needed
 	if isNegative {
-		d.Years = -d.Years
-		d.Months = -d.Months
-		d.Days = -d.Days
-		d.Hours = -d.Hours
-		d.Minutes = -d.Minutes
-		d.Seconds = -d.Seconds
-		d.Nanos = -d.Nanos
+		d.makeNegative()
 	}
 }

@@ -141,3 +141,7 @@ func (d Duration) Truncate(multiple Duration) Duration {
 	result.normalize()
 	return result
 }
+
+func abs(x int) int {
+	return int(math.Abs(float64(x)))
+}

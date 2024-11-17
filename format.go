@@ -35,83 +35,81 @@ func (d Duration) Format(format string) string {
 	return replacer.Replace(format)
 }
 
+// abs returns the absolute value of the Duration
+func (d Duration) abs() Duration {
+	return Duration{
+		Years:   abs(int(d.Years)),
+		Months:  abs(int(d.Months)),
+		Days:    abs(int(d.Days)),
+		Hours:   abs(int(d.Hours)),
+		Minutes: abs(int(d.Minutes)),
+		Seconds: abs(int(d.Seconds)),
+		Nanos:   abs(int(d.Nanos)),
+	}
+}
+
+// formatMainUnits formats years through seconds
+func (d Duration) formatMainUnits() []string {
+	parts := []string{}
+	if d.Years > 0 {
+		parts = append(parts, fmt.Sprintf("%dy", d.Years))
+	}
+	if d.Months > 0 {
+		parts = append(parts, fmt.Sprintf("%dmo", d.Months))
+	}
+	if d.Days > 0 {
+		parts = append(parts, fmt.Sprintf("%dd", d.Days))
+	}
+	if d.Hours > 0 {
+		parts = append(parts, fmt.Sprintf("%dh", d.Hours))
+	}
+	if d.Minutes > 0 {
+		parts = append(parts, fmt.Sprintf("%dm", d.Minutes))
+	}
+	if d.Seconds > 0 || (d.Nanos > 0 && d.Nanos >= 1000000000) {
+		parts = append(parts, fmt.Sprintf("%ds", d.Seconds))
+	}
+	return parts
+}
+
+// formatNanos formats sub-second units
+func (d Duration) formatNanos() string {
+	nanos := d.Nanos
+	if nanos == 0 {
+		return ""
+	}
+
+	switch {
+	case nanos >= 1000000:
+		if nanos%1000000 == 0 {
+			return fmt.Sprintf("%dms", nanos/1000000)
+		}
+		return fmt.Sprintf("%.3fms", float64(nanos)/1000000.0)
+	case nanos >= 1000:
+		if nanos%1000 == 0 {
+			return fmt.Sprintf("%dµs", nanos/1000)
+		}
+		return fmt.Sprintf("%.3fµs", float64(nanos)/1000.0)
+	default:
+		return fmt.Sprintf("%dns", nanos)
+	}
+}
+
 // String returns a human-readable representation of the duration
 func (d Duration) String() string {
 	if d.IsZero() {
 		return "0s"
 	}
 
-	// Determine if the duration is negative by checking the most significant non-zero component
-	isNegative := false
-	if d.Years < 0 {
-		isNegative = true
-	} else if d.Years == 0 && d.Months < 0 {
-		isNegative = true
-	} else if d.Years == 0 && d.Months == 0 && d.Days < 0 {
-		isNegative = true
-	} else if d.Years == 0 && d.Months == 0 && d.Days == 0 && d.Hours < 0 {
-		isNegative = true
-	} else if d.Years == 0 && d.Months == 0 && d.Days == 0 && d.Hours == 0 && d.Minutes < 0 {
-		isNegative = true
-	} else if d.Years == 0 && d.Months == 0 && d.Days == 0 && d.Hours == 0 && d.Minutes == 0 && d.Seconds < 0 {
-		isNegative = true
-	} else if d.Years == 0 && d.Months == 0 && d.Days == 0 && d.Hours == 0 && d.Minutes == 0 && d.Seconds == 0 && d.Nanos < 0 {
-		isNegative = true
-	}
-
-	// Make a copy to avoid modifying the original
+	isNegative := d.isNegativeDuration()
 	temp := d
 	if isNegative {
-		temp = Duration{
-			Years:   -d.Years,
-			Months:  -d.Months,
-			Days:    -d.Days,
-			Hours:   -d.Hours,
-			Minutes: -d.Minutes,
-			Seconds: -d.Seconds,
-			Nanos:   -d.Nanos,
-		}
+		temp = temp.abs()
 	}
 
-	parts := []string{}
-
-	if temp.Years > 0 {
-		parts = append(parts, fmt.Sprintf("%dy", temp.Years))
-	}
-	if temp.Months > 0 {
-		parts = append(parts, fmt.Sprintf("%dmo", temp.Months))
-	}
-	if temp.Days > 0 {
-		parts = append(parts, fmt.Sprintf("%dd", temp.Days))
-	}
-	if temp.Hours > 0 {
-		parts = append(parts, fmt.Sprintf("%dh", temp.Hours))
-	}
-	if temp.Minutes > 0 {
-		parts = append(parts, fmt.Sprintf("%dm", temp.Minutes))
-	}
-	if temp.Seconds > 0 || (temp.Nanos > 0 && temp.Nanos >= 1000000000) {
-		parts = append(parts, fmt.Sprintf("%ds", temp.Seconds))
-	}
-
-	// Handle sub-second units
-	if temp.Nanos > 0 {
-		nanos := temp.Nanos
-		if nanos >= 1000000 {
-			if nanos%1000000 == 0 {
-				parts = append(parts, fmt.Sprintf("%dms", nanos/1000000))
-			} else {
-				parts = append(parts, fmt.Sprintf("%.3fms", float64(nanos)/1000000.0))
-			}
-		} else if nanos >= 1000 {
-			if nanos%1000 == 0 {
-				parts = append(parts, fmt.Sprintf("%dµs", nanos/1000))
-			} else {
-				parts = append(parts, fmt.Sprintf("%.3fµs", float64(nanos)/1000.0))
-			}
-		} else {
-			parts = append(parts, fmt.Sprintf("%dns", nanos))
-		}
+	parts := temp.formatMainUnits()
+	if nanos := temp.formatNanos(); nanos != "" {
+		parts = append(parts, nanos)
 	}
 
 	result := strings.Join(parts, " ")
