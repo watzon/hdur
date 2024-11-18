@@ -7,7 +7,7 @@ import (
 )
 
 func BenchmarkDurationMath(b *testing.B) {
-	d := ParseMust("1y 2mo 3d")
+	d := MustParseDuration("1y 2mo 3d")
 	ops := []struct {
 		name   string
 		factor float64
@@ -95,7 +95,7 @@ func TestDurationMathOperations(t *testing.T) {
 		},
 		{
 			name:     "multiply complex duration",
-			d:        ParseMust("1y 2mo 3d"),
+			d:        MustParseDuration("1y 2mo 3d"),
 			op:       "mul",
 			factor:   2,
 			expected: "2y 4mo 6d",
@@ -109,7 +109,7 @@ func TestDurationMathOperations(t *testing.T) {
 		},
 		{
 			name:     "divide complex duration",
-			d:        ParseMust("2y 4mo 6d"),
+			d:        MustParseDuration("2y 4mo 6d"),
 			op:       "div",
 			factor:   2,
 			expected: "1y 2mo 3d",

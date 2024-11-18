@@ -8,10 +8,10 @@ import (
 func BenchmarkDurationString(b *testing.B) {
 	durations := []Duration{
 		Hours(2),
-		ParseMust("1y 2mo 3d"),
+		MustParseDuration("1y 2mo 3d"),
 		Minutes(90),
 		Milliseconds(500),
-		ParseMust("2.5h"),
+		MustParseDuration("2.5h"),
 	}
 
 	b.ResetTimer()
@@ -22,7 +22,7 @@ func BenchmarkDurationString(b *testing.B) {
 }
 
 func BenchmarkDurationFormat(b *testing.B) {
-	d := ParseMust("1y 2mo 3d 4h 5m 6s")
+	d := MustParseDuration("1y 2mo 3d 4h 5m 6s")
 	formats := []string{
 		"%y years %M months %d days",
 		"%h hours %m minutes %s seconds",
@@ -41,7 +41,7 @@ func BenchmarkDurationJSON(b *testing.B) {
 	type wrapper struct {
 		D Duration `json:"duration"`
 	}
-	w := wrapper{D: ParseMust("1y 2mo 3d")}
+	w := wrapper{D: MustParseDuration("1y 2mo 3d")}
 	data, _ := json.Marshal(w)
 
 	b.Run("marshal", func(b *testing.B) {
@@ -167,7 +167,7 @@ func TestDuration_String_Edge_Cases(t *testing.T) {
 }
 
 func TestDuration_Format(t *testing.T) {
-	d := ParseMust("1y 2mo 3d 4h 5m 6s")
+	d := MustParseDuration("1y 2mo 3d 4h 5m 6s")
 	tests := []struct {
 		name     string
 		format   string
@@ -224,7 +224,7 @@ func TestDurationJSON(t *testing.T) {
 		},
 		{
 			name:     "complex duration",
-			d:        ParseMust("1y 2mo 3d"),
+			d:        MustParseDuration("1y 2mo 3d"),
 			expected: `{"duration":"1y 2mo 3d"}`,
 			input:    `{"duration":"1y 2mo 3d"}`,
 		},
@@ -274,7 +274,7 @@ func TestDurationSQL(t *testing.T) {
 		},
 		{
 			name:     "complex duration",
-			d:        ParseMust("1y 2mo 3d"),
+			d:        MustParseDuration("1y 2mo 3d"),
 			expected: "1y 2mo 3d",
 		},
 		{

@@ -22,13 +22,13 @@ func BenchmarkParseDuration(b *testing.B) {
 	}
 }
 
-func TestParseMust_Panic(t *testing.T) {
+func TestMustParseDuration_Panic(t *testing.T) {
 	defer func() {
 		if r := recover(); r == nil {
-			t.Error("ParseMust() did not panic with invalid input")
+			t.Error("MustParseDuration() did not panic with invalid input")
 		}
 	}()
-	ParseMust("invalid duration")
+	MustParseDuration("invalid duration")
 }
 
 func TestParseDuration(t *testing.T) {

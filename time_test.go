@@ -9,10 +9,10 @@ import (
 func BenchmarkDurationAdd(b *testing.B) {
 	durations := []Duration{
 		Hours(2),
-		ParseMust("1y 2mo 3d"),
+		MustParseDuration("1y 2mo 3d"),
 		Minutes(90),
 		Milliseconds(500),
-		ParseMust("2.5h"),
+		MustParseDuration("2.5h"),
 	}
 	now := time.Now()
 

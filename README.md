@@ -138,7 +138,7 @@ double := hdur.Days(1).Mul(2)
 half := hdur.Hours(1).Div(2)
 
 // Round duration
-d := hdur.ParseMust("1h 30m")
+d := hdur.MustParseDuration("1h 30m")
 rounded := d.Round(hdur.Hours(1)) // 2h
 
 // Compare durations
@@ -150,7 +150,7 @@ if d1.Less(d2) {
 ### Formatting
 
 ```go
-d := hdur.ParseMust("1 year 2 months 3 days 4 hours")
+d := hdur.MustParseDuration("1 year 2 months 3 days 4 hours")
 
 // Default format
 fmt.Println(d) // "1y 2mo 3d 4h"

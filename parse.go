@@ -148,8 +148,8 @@ func ParseDuration(s string) (Duration, error) {
 	return d, nil
 }
 
-// ParseMust is like ParseDuration but panics if the string cannot be parsed
-func ParseMust(s string) Duration {
+// MustParseDuration is like ParseDuration but panics if the string cannot be parsed
+func MustParseDuration(s string) Duration {
 	d, err := ParseDuration(s)
 	if err != nil {
 		panic(err)
