@@ -69,16 +69,6 @@ func TestParseDuration(t *testing.T) {
 			expected: Duration{Days: 28}, // 14 days + 14 days
 		},
 		{
-			name:    "invalid unit",
-			input:   "5 invalid",
-			wantErr: true,
-		},
-		{
-			name:    "invalid number",
-			input:   "invalid days",
-			wantErr: true,
-		},
-		{
 			name:     "nanoseconds",
 			input:    "500ns",
 			expected: Duration{Nanos: 500},
@@ -92,6 +82,26 @@ func TestParseDuration(t *testing.T) {
 			name:     "milliseconds",
 			input:    "500ms",
 			expected: Duration{Nanos: 500000000},
+		},
+		{
+			name:    "invalid unit",
+			input:   "5 invalid",
+			wantErr: true,
+		},
+		{
+			name:    "invalid number",
+			input:   "invalid days",
+			wantErr: true,
+		},
+		{
+			name:    "empty string",
+			input:   "",
+			wantErr: true,
+		},
+		{
+			name:    "just invalid",
+			input:   "invalid",
+			wantErr: true,
 		},
 	}
 
