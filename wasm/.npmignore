@@ -1,0 +1,25 @@
+# Source files
+*.go
+go.mod
+go.sum
+
+# Build scripts
+build.sh
+
+# Git files
+.git
+.gitignore
+
+# IDE files
+.vscode
+.idea
+
+# Test files
+*_test.*
+
+# Temporary files
+*.tmp
+*.temp
+
+# Only include the dist directory
+!dist/
